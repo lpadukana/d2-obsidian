@@ -92,7 +92,7 @@ export class D2SettingsTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Theme ID")
       .setDesc(
-        "Available themes are located at https://github.com/terrastruct/d2/tree/master/d2themes"
+        "Available themes are located at https://github.com/d2lang/d2/tree/master/d2themes"
       )
       .addText((text) =>
         text

@@ -2,6 +2,14 @@
   "name": "d2-obsidian",
   "version": "1.1.4",
   "description": "This is the official D2 plugin for Obsidian.",
+  "homepage": "https://d2lang.com",
+  "bugs": {
+    "url": "https://github.com/d2lang/d2-obsidian/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d2lang/d2-obsidian"
+  },
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

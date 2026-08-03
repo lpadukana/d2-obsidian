@@ -5,11 +5,11 @@
   </h2>
 
 D2 is a modern diagram scripting language thats turns text to diagrams. The source code for D2, as well as install instructions and all other information, can be found at
-[https://github.com/terrastruct/d2](https://github.com/terrastruct/d2).
+[https://github.com/d2lang/d2](https://github.com/d2lang/d2).
 
-[![ci](https://github.com/terrastruct/d2-obsidian/actions/workflows/ci.yml/badge.svg)](https://github.com/terrastruct/d2-obsidian/actions/workflows/ci.yml)
-[![ci](https://github.com/terrastruct/d2-obsidian/actions/workflows/daily.yml/badge.svg)](https://github.com/terrastruct/d2-obsidian/actions/workflows/daily.yml)
-[![license](https://img.shields.io/github/license/terrastruct/d2-obsidian?color=9cf)](./LICENSE.txt)
+[![ci](https://github.com/d2lang/d2-obsidian/actions/workflows/ci.yml/badge.svg)](https://github.com/d2lang/d2-obsidian/actions/workflows/ci.yml)
+[![ci](https://github.com/d2lang/d2-obsidian/actions/workflows/daily.yml/badge.svg)](https://github.com/d2lang/d2-obsidian/actions/workflows/daily.yml)
+[![license](https://img.shields.io/github/license/d2lang/d2-obsidian?color=9cf)](./LICENSE.txt)
 [![discord](https://img.shields.io/discord/1039184639652265985?label=discord)](https://discord.gg/NF6X8K4eDq)
 
 https://user-images.githubusercontent.com/6413609/205414613-5b2559f1-0645-4432-bb7b-d980de527201.mp4
@@ -20,12 +20,12 @@ https://user-images.githubusercontent.com/6413609/205414613-5b2559f1-0645-4432-b
 
 Settings > Community plugins > Browse > Search for "D2"
 
-**important**: [D2](https://github.com/terrastruct/d2) must be installed for this plugin to work currently. We will later on introduce a remote API as an option, but currently this plugin calls your local installation of D2.
+**important**: [D2](https://github.com/d2lang/d2) must be installed for this plugin to work currently. We will later on introduce a remote API as an option, but currently this plugin calls your local installation of D2.
 
 ## Configurations
 
 - `Layout engine`: D2 supports multiple layout engines, which can significantly affect the look of your diagram.
-- `Theme ID`: For a list of available themes, visit the [D2 repository](https://github.com/terrastruct/d2/tree/master/d2themes).
+- `Theme ID`: For a list of available themes, visit the [D2 repository](https://github.com/d2lang/d2/tree/master/d2themes).
 - `Pad`: Number of pixels padded around the rendered diagram.
 - `Sketch mode`: Render the diagram to look like it was sketched by hand.
 - `Container height`: Diagram max render height in pixels (Requires d2 v0.2.2 and up).
@@ -56,6 +56,6 @@ Hello -> World
 - I'd like to contribute.
   - We welcome contributions! Please pick one from an existing Issue, or open one if none exists.
 - I have a feature request, proposal, or bug report.
-  - Please open up a Github Issue. If it's D2-specific, please open it in the [D2 repository](https://github.com/terrastruct/d2). If it's specific to this plugin, please open it here.
+  - Please open up a Github Issue. If it's D2-specific, please open it in the [D2 repository](https://github.com/d2lang/d2). If it's specific to this plugin, please [open it here](https://github.com/d2lang/d2-obsidian/issues).
 - I have a private inquiry.
   - Please reach out at [hi@d2lang.com](hi@d2lang.com).

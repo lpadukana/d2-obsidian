@@ -147,10 +147,13 @@ export class D2SettingsTab extends PluginSettingTab {
         : DEFAULT_SETTINGS.dagreNodeSeparation;
       new Setting(containerEl)
         .setName("Node separation")
+        // The two engines tune OPPOSITE axes, which decides which one to pick
+        // for a given diagram — so each description says which way it squeezes
+        // rather than repeating the upstream wording.
         .setDesc(
           isElk
-            ? `Pixels kept between nodes of adjacent layers — the gap between boxes (ELK, default ${fallback})`
-            : `Pixels separating nodes horizontally (dagre, default ${fallback})`
+            ? `Pixels between adjacent layers. Squeezes ALONG the layout direction, so it narrows a "right" diagram and shortens a "down" one (ELK, default ${fallback})`
+            : `Pixels between nodes within a layer. Squeezes ACROSS the layout direction, so it shortens a "right" diagram and narrows a "down" one (dagre, default ${fallback})`
         )
         .addText((text) =>
           text

@@ -364,6 +364,15 @@ export class D2Processor {
       "--bundle=false",
       "--scale=1",
     ];
+
+    // Only the matching engine's flag is sent. d2 accepts the other one and
+    // silently ignores it — measured — so sending both would work and would
+    // leave a reader unable to tell which value was doing anything.
+    if (this.plugin.settings.layoutEngine === "elk") {
+      args.push(`--elk-nodeNodeBetweenLayers=${this.plugin.settings.elkNodeSeparation}`);
+    } else if (this.plugin.settings.layoutEngine === "dagre") {
+      args.push(`--dagre-nodesep=${this.plugin.settings.dagreNodeSeparation}`);
+    }
     const cmd = args.join(" ");
     const child = exec(cmd, options);
     child.stdin?.write(source);

@@ -13,6 +13,10 @@ export interface D2PluginSettings {
   sketch: boolean;
   containerHeight: number;
   transparentBackground: boolean;
+  // Per engine, because the two expose different flags with different defaults
+  // and no shared unit — one number for both would silently mean two things.
+  elkNodeSeparation: number;
+  dagreNodeSeparation: number;
 }
 
 export const DEFAULT_SETTINGS: D2PluginSettings = {
@@ -27,6 +31,9 @@ export const DEFAULT_SETTINGS: D2PluginSettings = {
   // Off by default: the themed canvas is what d2 renders standalone, and a note
   // with a different background is the reason to change it, not the norm.
   transparentBackground: false,
+  // d2's own defaults, so an untouched install renders exactly as it does today.
+  elkNodeSeparation: 70,
+  dagreNodeSeparation: 60,
 };
 
 export class D2SettingsTab extends PluginSettingTab {
@@ -85,11 +92,9 @@ export class D2SettingsTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.layoutEngine = value;
             await this.plugin.saveSettings();
-            if (value === LAYOUT_ENGINES.TALA.value) {
-              this.addTALASettings();
-            } else {
-              this.talaSettings?.remove();
-            }
+            // Redraw the whole tab: the spacing control belongs to the engine,
+            // so which one is shown changes with this dropdown.
+            this.display();
           });
       });
 
@@ -131,6 +136,49 @@ export class D2SettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    // Spacing is a per-engine flag: elk and dagre name it differently and start
+    // from different defaults, so they get separate values. TALA exposes none.
+    const engine = this.plugin.settings.layoutEngine;
+    const isElk = engine === LAYOUT_ENGINES.ELK.value;
+    if (isElk || engine === LAYOUT_ENGINES.DAGRE.value) {
+      const fallback = isElk
+        ? DEFAULT_SETTINGS.elkNodeSeparation
+        : DEFAULT_SETTINGS.dagreNodeSeparation;
+      new Setting(containerEl)
+        .setName("Node separation")
+        .setDesc(
+          isElk
+            ? `Pixels kept between nodes of adjacent layers — the gap between boxes (ELK, default ${fallback})`
+            : `Pixels separating nodes horizontally (dagre, default ${fallback})`
+        )
+        .addText((text) =>
+          text
+            .setPlaceholder(String(fallback))
+            .setValue(
+              String(
+                isElk
+                  ? this.plugin.settings.elkNodeSeparation
+                  : this.plugin.settings.dagreNodeSeparation
+              )
+            )
+            .onChange(async (value) => {
+              let next = Number(value);
+              if (value === "") {
+                next = fallback;
+              } else if (isNaN(next) || next < 0) {
+                new Notice("Please specify a positive number");
+                next = fallback;
+              }
+              if (isElk) {
+                this.plugin.settings.elkNodeSeparation = next;
+              } else {
+                this.plugin.settings.dagreNodeSeparation = next;
+              }
+              await this.plugin.saveSettings();
+            })
+        );
+    }
 
     new Setting(containerEl)
       .setName("Sketch mode")

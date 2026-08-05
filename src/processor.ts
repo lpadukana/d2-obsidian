@@ -5,6 +5,7 @@ import debounce from "lodash.debounce";
 import os from "os";
 
 import D2Plugin from "./main";
+import { DEFAULT_SETTINGS } from "./settings";
 
 export class D2Processor {
   plugin: D2Plugin;
@@ -340,7 +341,10 @@ export class D2Processor {
       pathArray.push(`${GOPATH.replace("\n", "")}/bin`);
     }
     if (this.plugin.settings.d2Path) {
-      pathArray.push(this.plugin.settings.d2Path);
+      // FIRST, not last. Appending it meant any d2 already on $PATH won, so a
+      // path set precisely because the wrong binary was being picked up did
+      // nothing — the setting only worked when it was not needed.
+      pathArray.unshift(this.plugin.settings.d2Path);
     }
 
     const options: any = {
@@ -372,6 +376,15 @@ export class D2Processor {
       args.push(`--elk-nodeNodeBetweenLayers=${this.plugin.settings.elkNodeSeparation}`);
     } else if (this.plugin.settings.layoutEngine === "dagre") {
       args.push(`--dagre-nodesep=${this.plugin.settings.dagreNodeSeparation}`);
+      // Sent only when moved off the default. Stock d2 has no such flag and
+      // fails the whole render with "unknown flag", so an untouched install
+      // must never see it — measured, not assumed.
+      if (
+        this.plugin.settings.dagreRankSeparation !==
+        DEFAULT_SETTINGS.dagreRankSeparation
+      ) {
+        args.push(`--dagre-ranksep=${this.plugin.settings.dagreRankSeparation}`);
+      }
     }
     const cmd = args.join(" ");
     const child = exec(cmd, options);

@@ -17,6 +17,7 @@ export interface D2PluginSettings {
   // and no shared unit — one number for both would silently mean two things.
   elkNodeSeparation: number;
   dagreNodeSeparation: number;
+  dagreRankSeparation: number;
 }
 
 export const DEFAULT_SETTINGS: D2PluginSettings = {
@@ -34,6 +35,9 @@ export const DEFAULT_SETTINGS: D2PluginSettings = {
   // d2's own defaults, so an untouched install renders exactly as it does today.
   elkNodeSeparation: 70,
   dagreNodeSeparation: 60,
+  // At the default the flag is not sent at all, because stock d2 rejects it as
+  // unknown. Moving it off 100 is the opt-in.
+  dagreRankSeparation: 100,
 };
 
 export class D2SettingsTab extends PluginSettingTab {
@@ -178,6 +182,30 @@ export class D2SettingsTab extends PluginSettingTab {
               } else {
                 this.plugin.settings.dagreNodeSeparation = next;
               }
+              await this.plugin.saveSettings();
+            })
+        );
+    }
+
+    if (engine === LAYOUT_ENGINES.DAGRE.value) {
+      new Setting(containerEl)
+        .setName("Rank separation")
+        .setDesc(
+          `Minimum pixels between ranks — the axis "Node separation" cannot reach. Edge labels are drawn in this gap, so a label wider than the value still widens it. Requires a d2 build that accepts --dagre-ranksep; at the default of ${DEFAULT_SETTINGS.dagreRankSeparation} nothing is sent and any d2 works.`
+        )
+        .addText((text) =>
+          text
+            .setPlaceholder(String(DEFAULT_SETTINGS.dagreRankSeparation))
+            .setValue(String(this.plugin.settings.dagreRankSeparation))
+            .onChange(async (value) => {
+              let next = Number(value);
+              if (value === "") {
+                next = DEFAULT_SETTINGS.dagreRankSeparation;
+              } else if (isNaN(next) || next < 0) {
+                new Notice("Please specify a positive number");
+                next = DEFAULT_SETTINGS.dagreRankSeparation;
+              }
+              this.plugin.settings.dagreRankSeparation = next;
               await this.plugin.saveSettings();
             })
         );

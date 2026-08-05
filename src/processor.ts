@@ -46,7 +46,16 @@ export class D2Processor {
       pageContainer.dataset.pageID = pageID;
     }
 
-    let debouncedFunc = this.debouncedMap.get(pageID);
+    // Key per DIAGRAM, not per page. A page-wide debounce and abort controller
+    // meant a second d2 block cancelled the first block's in-flight render,
+    // surfacing as "D2 Compilation Error: The operation was aborted" on
+    // whichever diagram was slow enough to lose the race — so it looked
+    // intermittent and content-dependent. lineStart identifies the block within
+    // the file; pageID keeps the same file in two split panes apart.
+    const lineStart = ctx.getSectionInfo(el)?.lineStart;
+    const blockID = `${pageID}:${lineStart ?? "unknown"}`;
+
+    let debouncedFunc = this.debouncedMap.get(blockID);
     if (!debouncedFunc) {
       // No need to debounce initial render
       await this.export(source, el, ctx);
@@ -54,13 +63,13 @@ export class D2Processor {
       debouncedFunc = debounce(this.export, this.plugin.settings.debounce, {
         leading: true,
       });
-      this.debouncedMap.set(pageID, debouncedFunc);
+      this.debouncedMap.set(blockID, debouncedFunc);
       return;
     }
 
-    this.abortControllerMap.get(pageID)?.abort();
+    this.abortControllerMap.get(blockID)?.abort();
     const newAbortController = new AbortController();
-    this.abortControllerMap.set(pageID, newAbortController);
+    this.abortControllerMap.set(blockID, newAbortController);
 
     await debouncedFunc(source, el, ctx, newAbortController.signal);
   };

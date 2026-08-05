@@ -65,6 +65,13 @@
   position: relative;
 }
 
+/* Centred, but `safe`: once a diagram is wider than the pane, plain centring
+   pushes its left edge past the scroll origin and makes it unreachable. */
+.D2__Diagram {
+  display: flex;
+  justify-content: safe center;
+}
+
 /* Default: the diagram is scaled to fit the pane. `insertImage` sets max-width
    inline, so undoing it needs !important. */
 .D2__Diagram--actual {

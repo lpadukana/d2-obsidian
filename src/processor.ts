@@ -34,6 +34,14 @@ export class D2Processor {
     this.directionOverrideMap = new Map();
   }
 
+  // What the diagram is laid out as right now, so the switch knows where it is
+  // starting from. d2 lays out downward when the source says nothing — measured
+  // against the binary, not taken from the docs.
+  sourceDirection(source: string): string {
+    const match = source.match(/^direction:\s*(\w+)/m);
+    return match ? match[1] : "down";
+  }
+
   // Rewrites the ROOT direction only. The anchored pattern cannot match an
   // indented one, so a direction set inside a container is left alone.
   applyDirection(source: string, direction?: string): string {
@@ -238,28 +246,22 @@ export class D2Processor {
 
         // Cycles the layout axis and ends back at the note's own direction, so
         // the reader can always get to what the file actually says.
-        const DIRECTIONS = ["right", "down"];
-        const directionTooltip = (d?: string) =>
-          d ? `Direction: ${d}` : "Direction: as written";
+        // Alternates from whatever the diagram is CURRENTLY laid out as. Starting
+        // from a fixed value instead wasted the first click on any note already
+        // drawn that way, which looked like the button was dead.
+        const effectiveDirection = () =>
+          this.directionOverrideMap.get(key) ?? this.sourceDirection(source);
         const dirButton = new ButtonComponent(toolbar)
           .setClass("Preview__Button")
           .setIcon("d2-direction");
         dirButton.buttonEl.addClass("Preview__Direction");
-        dirButton.setTooltip(directionTooltip(this.directionOverrideMap.get(key)));
+        dirButton.setTooltip(`Direction: ${effectiveDirection()}`);
         dirButton.onClick((e) => {
           e.preventDefault();
           e.stopPropagation();
-          const current = this.directionOverrideMap.get(key);
-          const next =
-            current === undefined
-              ? DIRECTIONS[0]
-              : DIRECTIONS[DIRECTIONS.indexOf(current) + 1];
-          if (next === undefined) {
-            this.directionOverrideMap.delete(key);
-          } else {
-            this.directionOverrideMap.set(key, next);
-          }
-          dirButton.setTooltip(directionTooltip(next));
+          const next = effectiveDirection() === "right" ? "down" : "right";
+          this.directionOverrideMap.set(key, next);
+          dirButton.setTooltip(`Direction: ${next}`);
           el.empty();
           this.attemptExport(source, el, ctx);
         });

@@ -72,6 +72,13 @@
   justify-content: safe center;
 }
 
+/* A flex item shrinks to fit by default, which silently overrode `max-width:
+   none` and made the actual-size toggle do nothing on a wide diagram. Fit mode
+   is enforced by max-width alone, so refusing to shrink costs it nothing. */
+.D2__Diagram > svg {
+  flex-shrink: 0;
+}
+
 /* Default: the diagram is scaled to fit the pane. `insertImage` sets max-width
    inline, so undoing it needs !important. */
 .D2__Diagram--actual {

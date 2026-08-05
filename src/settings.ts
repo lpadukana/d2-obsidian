@@ -12,6 +12,7 @@ export interface D2PluginSettings {
   pad: number;
   sketch: boolean;
   containerHeight: number;
+  transparentBackground: boolean;
 }
 
 export const DEFAULT_SETTINGS: D2PluginSettings = {
@@ -23,6 +24,9 @@ export const DEFAULT_SETTINGS: D2PluginSettings = {
   pad: 100,
   sketch: false,
   containerHeight: 800,
+  // Off by default: the themed canvas is what d2 renders standalone, and a note
+  // with a different background is the reason to change it, not the norm.
+  transparentBackground: false,
 };
 
 export class D2SettingsTab extends PluginSettingTab {
@@ -136,6 +140,20 @@ export class D2SettingsTab extends PluginSettingTab {
           this.plugin.settings.sketch = value;
           await this.plugin.saveSettings();
         })
+      );
+
+    new Setting(containerEl)
+      .setName("Transparent background")
+      .setDesc(
+        "Drop the diagram's own canvas so the note's background shows through"
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.transparentBackground)
+          .onChange(async (value) => {
+            this.plugin.settings.transparentBackground = value;
+            await this.plugin.saveSettings();
+          })
       );
 
     new Setting(containerEl)

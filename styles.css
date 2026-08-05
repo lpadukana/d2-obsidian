@@ -63,13 +63,6 @@
   position: relative;
 }
 
-/* A diagram is a picture, not a passage. Selecting its text on a double-click
-   is never what was meant, and it hides the double-click as a gesture. */
-.D2__Diagram {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
 /* Default: the diagram is scaled to fit the pane. `insertImage` sets max-width
    inline, so undoing it needs !important. */
 .D2__Diagram--actual {

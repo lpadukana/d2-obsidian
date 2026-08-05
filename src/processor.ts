@@ -134,6 +134,18 @@ export class D2Processor {
     svgEl.style.height = "fit-content";
     svgEl.style.width = "fit-content";
 
+    // d2 paints its canvas with a single rect, the first child of the inner
+    // <svg>. There is no CLI flag for this, and a root `style.fill` does not
+    // reach it — dropping that one fill is the only lever.
+    //
+    // It has to be an INLINE STYLE. d2 embeds `.fill-N7 { fill: … }`, and in SVG
+    // a stylesheet rule outranks a presentation attribute, so setting fill="none"
+    // changes the DOM and nothing else: the canvas stays painted.
+    if (this.plugin.settings.transparentBackground) {
+      const background = svgEl.querySelector("svg > rect");
+      background?.setAttribute("style", "fill: none");
+    }
+
     this.formatLinks(svgEl);
     containerEl.innerHTML = this.sanitizeSVGIDs(svgEl, ctx.docId);
 
@@ -203,13 +215,29 @@ export class D2Processor {
         });
 
         const diagramEl = el.querySelector<HTMLElement>(".D2__Diagram");
+
+        // A double-click on a link is the reader reaching for the note, not for
+        // the zoom.
+        const isLink = (e: MouseEvent) => !!(e.target as HTMLElement).closest("a");
+
+        // The word is selected on the SECOND MOUSEDOWN, before dblclick fires,
+        // so suppressing it there is already too late. Cancelling that mousedown
+        // leaves ordinary drag-selection untouched — only the double-click's own
+        // selection is given up, which is the one the gesture replaces.
+        diagramEl?.addEventListener("mousedown", (e) => {
+          if (e.detail > 1 && !isLink(e)) {
+            e.preventDefault();
+          }
+        });
+
         diagramEl?.addEventListener("dblclick", (e) => {
-          // A double-click on a link is the reader reaching for the note, not
-          // for the zoom. Leave that alone.
-          if ((e.target as HTMLElement).closest("a")) {
+          if (isLink(e)) {
             return;
           }
           e.preventDefault();
+          // Anything a previous drag left highlighted would otherwise sit there
+          // through the zoom.
+          activeWindow.getSelection()?.removeAllRanges();
           toggleActualSize();
         });
       }

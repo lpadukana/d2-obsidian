@@ -176,8 +176,13 @@ export class D2Processor {
     containerEl.innerHTML = this.sanitizeSVGIDs(svgEl, ctx.docId);
 
     // A re-render fires on edit and on scroll, so the chosen size has to outlive
-    // the element it was chosen on — otherwise it resets under the reader.
-    if (this.actualSizeMap.get(this.blockKey(el, ctx))) {
+    // the element it was chosen on — otherwise it resets under the reader. An
+    // untouched diagram falls back to the setting; `??` and not `||`, so a
+    // deliberate "fit" is not mistaken for having chosen nothing.
+    const actual =
+      this.actualSizeMap.get(this.blockKey(el, ctx)) ??
+      this.plugin.settings.actualSizeByDefault;
+    if (actual) {
       containerEl.addClass("D2__Diagram--actual");
     }
   }
@@ -223,7 +228,10 @@ export class D2Processor {
         // The buttons carry no text, so the tooltip is the only thing saying
         // what each one does and which state it is in.
         sizeButton.setTooltip(
-          this.actualSizeMap.get(key) ? "Fit to pane" : "Actual size"
+          (this.actualSizeMap.get(key) ??
+          this.plugin.settings.actualSizeByDefault)
+            ? "Fit to pane"
+            : "Actual size"
         );
 
         // One path for both the button and the double-click gesture, so the two

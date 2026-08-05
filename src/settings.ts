@@ -13,6 +13,7 @@ export interface D2PluginSettings {
   sketch: boolean;
   containerHeight: number;
   transparentBackground: boolean;
+  actualSizeByDefault: boolean;
   // Per engine, because the two expose different flags with different defaults
   // and no shared unit — one number for both would silently mean two things.
   elkNodeSeparation: number;
@@ -32,6 +33,9 @@ export const DEFAULT_SETTINGS: D2PluginSettings = {
   // Off by default: the themed canvas is what d2 renders standalone, and a note
   // with a different background is the reason to change it, not the norm.
   transparentBackground: false,
+  // Off by default: fitting to the pane is what a reader scrolling a note
+  // expects. Turning it on suits a vault of diagrams read at their own scale.
+  actualSizeByDefault: false,
   // d2's own defaults, so an untouched install renders exactly as it does today.
   elkNodeSeparation: 70,
   dagreNodeSeparation: 60,
@@ -220,6 +224,20 @@ export class D2SettingsTab extends PluginSettingTab {
           this.plugin.settings.sketch = value;
           await this.plugin.saveSettings();
         })
+      );
+
+    new Setting(containerEl)
+      .setName("Actual size by default")
+      .setDesc(
+        "Render diagrams at their natural size and let the block scroll, instead of scaling them to fit the pane. The per-diagram toggle still overrides this either way."
+      )
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.actualSizeByDefault)
+          .onChange(async (value) => {
+            this.plugin.settings.actualSizeByDefault = value;
+            await this.plugin.saveSettings();
+          })
       );
 
     new Setting(containerEl)

@@ -18,6 +18,7 @@ export class D2Processor {
     ) => Promise<void>
   >;
   abortControllerMap: Map<string, AbortController>;
+  actualSizeMap: Map<string, boolean>;
   prevImage: string;
   abortController: AbortController;
 
@@ -25,6 +26,7 @@ export class D2Processor {
     this.plugin = plugin;
     this.debouncedMap = new Map();
     this.abortControllerMap = new Map();
+    this.actualSizeMap = new Map();
   }
 
   attemptExport = async (
@@ -114,10 +116,17 @@ export class D2Processor {
     }, svgEl.outerHTML);
   };
 
+  // Identifies one diagram across re-renders. Keyed on sourcePath and NOT on
+  // ctx.docId: docId is regenerated per render, so a key holding it never
+  // matches on the way back and the remembered state is silently lost.
+  blockKey(el: HTMLElement, ctx: MarkdownPostProcessorContext): string {
+    return `${ctx.sourcePath}:${ctx.getSectionInfo(el)?.lineStart ?? "unknown"}`;
+  }
+
   insertImage(image: string, el: HTMLElement, ctx: MarkdownPostProcessorContext) {
     const parser = new DOMParser();
     const svg = parser.parseFromString(image, "image/svg+xml");
-    const containerEl = el.createDiv();
+    const containerEl = el.createDiv({ cls: "D2__Diagram" });
 
     const svgEl = svg.documentElement;
     svgEl.style.maxHeight = `${this.plugin.settings.containerHeight}px`;
@@ -127,6 +136,12 @@ export class D2Processor {
 
     this.formatLinks(svgEl);
     containerEl.innerHTML = this.sanitizeSVGIDs(svgEl, ctx.docId);
+
+    // A re-render fires on edit and on scroll, so the chosen size has to outlive
+    // the element it was chosen on — otherwise it resets under the reader.
+    if (this.actualSizeMap.get(this.blockKey(el, ctx))) {
+      containerEl.addClass("D2__Diagram--actual");
+    }
   }
 
   export = async (
@@ -142,8 +157,10 @@ export class D2Processor {
         this.prevImage = image;
         this.insertImage(image, el, ctx);
 
-        const button = new ButtonComponent(el)
-          .setClass("Preview__Recompile")
+        const toolbar = el.createDiv({ cls: "Preview__Toolbar" });
+
+        const recompile = new ButtonComponent(toolbar)
+          .setClass("Preview__Button")
           .setIcon("recompile")
           .onClick((e) => {
             e.preventDefault();
@@ -151,9 +168,49 @@ export class D2Processor {
             el.empty();
             this.attemptExport(source, el, ctx);
           });
+        recompile.buttonEl.addClass("Preview__Recompile");
+        recompile.buttonEl.createEl("span", { text: "Recompile" });
 
-        button.buttonEl.createEl("span", {
-          text: "Recompile",
+        // A wide diagram is scaled to fit the pane, which shrinks its text
+        // rather than clipping it — unreadable well before it is unusable. This
+        // drops the fit and lets the container scroll at natural size.
+        const key = this.blockKey(el, ctx);
+        const sizeButton = new ButtonComponent(toolbar)
+          .setClass("Preview__Button")
+          .setIcon("d2-actual-size");
+        sizeButton.buttonEl.addClass("Preview__ActualSize");
+        const sizeLabel = sizeButton.buttonEl.createEl("span", {
+          text: this.actualSizeMap.get(key) ? "Fit" : "Actual size",
+        });
+
+        // One path for both the button and the double-click gesture, so the two
+        // can never disagree about which state the diagram is in.
+        const toggleActualSize = () => {
+          const diagramEl = el.querySelector<HTMLElement>(".D2__Diagram");
+          if (!diagramEl) {
+            return;
+          }
+          const actual = !diagramEl.classList.contains("D2__Diagram--actual");
+          diagramEl.classList.toggle("D2__Diagram--actual", actual);
+          this.actualSizeMap.set(key, actual);
+          sizeLabel.textContent = actual ? "Fit" : "Actual size";
+        };
+
+        sizeButton.onClick((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          toggleActualSize();
+        });
+
+        const diagramEl = el.querySelector<HTMLElement>(".D2__Diagram");
+        diagramEl?.addEventListener("dblclick", (e) => {
+          // A double-click on a link is the reader reaching for the note, not
+          // for the zoom. Leave that alone.
+          if ((e.target as HTMLElement).closest("a")) {
+            return;
+          }
+          e.preventDefault();
+          toggleActualSize();
         });
       }
     } catch (err) {

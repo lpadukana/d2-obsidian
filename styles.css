@@ -3,7 +3,7 @@
 }
 
 .Preview__Error--Title {
-  color: #be0b41 !important;
+  color: var(--text-error) !important;
 }
 
 .Preview__Error {
@@ -13,27 +13,48 @@
   white-space: pre-wrap;
 }
 
-.Preview__Recompile {
+/* One row holding every control, so buttons sit side by side and none of them
+   needs a hardcoded offset. */
+.Preview__Toolbar {
   position: absolute;
   top: 4px;
   left: 4px;
-  height: 24px;
-  padding: 6px;
-  background-color: white !important;
-  color: #2e3346;
+  z-index: 1;
   display: flex;
   gap: 4px;
-  box-shadow: none !important;
-  border: 1px solid #dee1eb;
-  filter: drop-shadow(1px 1px 4px rgba(31, 36, 58, 0.08));
 }
 
-.Preview__Recompile:hover {
-  filter: drop-shadow(2px 2px 16px rgba(31, 36, 58, 0.12));
+/* Themed, not hardcoded. The previous rule forced a white background and a dark
+   navy text colour, which Obsidian's own button styling then overrode — leaving
+   light grey on white, unreadable in either theme. */
+.Preview__Button {
+  height: 24px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-ui-smaller);
+  line-height: 1;
+  color: var(--text-muted);
+  background-color: var(--background-primary) !important;
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: none !important;
+  opacity: 0.65;
+  transition: opacity 0.1s ease-in-out;
+}
+
+/* Out of the way while reading, present the moment you reach for it. */
+.block-language-d2:hover .Preview__Button {
+  opacity: 1;
+}
+
+.Preview__Button:hover {
+  color: var(--text-normal);
+  background-color: var(--background-modifier-hover) !important;
   cursor: pointer;
 }
 
-.Preview__Recompile > .svg-icon {
+.Preview__Button > .svg-icon {
   height: 12px !important;
   width: 12px !important;
 }
@@ -42,8 +63,27 @@
   position: relative;
 }
 
+/* A diagram is a picture, not a passage. Selecting its text on a double-click
+   is never what was meant, and it hides the double-click as a gesture. */
+.D2__Diagram {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Default: the diagram is scaled to fit the pane. `insertImage` sets max-width
+   inline, so undoing it needs !important. */
+.D2__Diagram--actual {
+  overflow: auto;
+  max-width: 100%;
+}
+
+.D2__Diagram--actual svg {
+  max-width: none !important;
+  max-height: none !important;
+}
+
 @media print {
-  .Preview__Recompile {
+  .Preview__Toolbar {
     display: none;
   }
 }

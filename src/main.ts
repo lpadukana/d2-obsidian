@@ -2,7 +2,7 @@ import { Plugin, addIcon } from "obsidian";
 
 import { D2PluginSettings, D2SettingsTab, DEFAULT_SETTINGS } from "./settings";
 import { D2Processor } from "./processor";
-import { RecompileIcon } from "./constants";
+import { RecompileIcon, ZoomIcon } from "./constants";
 
 export default class D2Plugin extends Plugin {
   settings: D2PluginSettings;
@@ -10,6 +10,7 @@ export default class D2Plugin extends Plugin {
 
   async onload() {
     addIcon("recompile", RecompileIcon);
+    addIcon("d2-actual-size", ZoomIcon);
     await this.loadSettings();
     this.addSettingTab(new D2SettingsTab(this.app, this));
 

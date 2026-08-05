@@ -35,9 +35,10 @@ export const DEFAULT_SETTINGS: D2PluginSettings = {
   // d2's own defaults, so an untouched install renders exactly as it does today.
   elkNodeSeparation: 70,
   dagreNodeSeparation: 60,
-  // At the default the flag is not sent at all, because stock d2 rejects it as
-  // unknown. Moving it off 100 is the opt-in.
-  dagreRankSeparation: 100,
+  // Zero means let d2 derive it, and at zero the flag is not sent at all —
+  // stock d2 rejects it as unknown, so an untouched install must keep working
+  // against any build. Setting a value is the opt-in.
+  dagreRankSeparation: 0,
 };
 
 export class D2SettingsTab extends PluginSettingTab {
@@ -191,7 +192,7 @@ export class D2SettingsTab extends PluginSettingTab {
       new Setting(containerEl)
         .setName("Rank separation")
         .setDesc(
-          `Minimum pixels between ranks — the axis "Node separation" cannot reach. Edge labels are drawn in this gap, so a label wider than the value still widens it. Requires a d2 build that accepts --dagre-ranksep; at the default of ${DEFAULT_SETTINGS.dagreRankSeparation} nothing is sent and any d2 works.`
+          `Pixels between ranks — the axis "Node separation" cannot reach. 0 lets d2 derive it from the widest edge label, which sizes every gap in the diagram for its longest label. A set value overrides that and is usually far smaller; check no label ends up over a node. Needs a d2 build accepting --dagre-ranksep, and at 0 nothing is sent so any d2 works.`
         )
         .addText((text) =>
           text

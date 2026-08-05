@@ -35,4 +35,14 @@ const ZoomIcon = `
 </svg>
 `;
 
-export { LAYOUT_ENGINES, RecompileIcon, ZoomIcon };
+// Two arrows at right angles: the layout axis being turned.
+const DirectionIcon = `
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12.5 25H70.83" stroke="currentColor" stroke-width="8.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M54.17 8.33L70.83 25L54.17 41.67" stroke="currentColor" stroke-width="8.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M25 87.5V29.17" stroke="currentColor" stroke-width="8.33333" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M8.33 70.83L25 87.5L41.67 70.83" stroke="currentColor" stroke-width="8.33333" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+`;
+
+export { LAYOUT_ENGINES, RecompileIcon, ZoomIcon, DirectionIcon };

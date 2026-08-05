@@ -19,6 +19,10 @@ export class D2Processor {
   >;
   abortControllerMap: Map<string, AbortController>;
   actualSizeMap: Map<string, boolean>;
+  // Deliberately in memory only. A direction chosen here is a way of looking at
+  // the diagram, not a fact about it: it is never written back to the note and
+  // never saved to settings, so closing Obsidian forgets it.
+  directionOverrideMap: Map<string, string>;
   prevImage: string;
   abortController: AbortController;
 
@@ -27,6 +31,19 @@ export class D2Processor {
     this.debouncedMap = new Map();
     this.abortControllerMap = new Map();
     this.actualSizeMap = new Map();
+    this.directionOverrideMap = new Map();
+  }
+
+  // Rewrites the ROOT direction only. The anchored pattern cannot match an
+  // indented one, so a direction set inside a container is left alone.
+  applyDirection(source: string, direction?: string): string {
+    if (!direction) {
+      return source;
+    }
+    const rootDirection = /^direction:[^\n]*$/m;
+    return rootDirection.test(source)
+      ? source.replace(rootDirection, `direction: ${direction}`)
+      : `direction: ${direction}\n${source}`;
   }
 
   attemptExport = async (
@@ -163,7 +180,10 @@ export class D2Processor {
     signal?: AbortSignal
   ) => {
     try {
-      const image = await this.generatePreview(source, signal);
+      const image = await this.generatePreview(
+        this.applyDirection(source, this.directionOverrideMap.get(this.blockKey(el, ctx))),
+        signal
+      );
       if (image) {
         el.empty();
         this.prevImage = image;
@@ -181,7 +201,7 @@ export class D2Processor {
             this.attemptExport(source, el, ctx);
           });
         recompile.buttonEl.addClass("Preview__Recompile");
-        recompile.buttonEl.createEl("span", { text: "Recompile" });
+        recompile.setTooltip("Recompile");
 
         // A wide diagram is scaled to fit the pane, which shrinks its text
         // rather than clipping it — unreadable well before it is unusable. This
@@ -191,9 +211,11 @@ export class D2Processor {
           .setClass("Preview__Button")
           .setIcon("d2-actual-size");
         sizeButton.buttonEl.addClass("Preview__ActualSize");
-        const sizeLabel = sizeButton.buttonEl.createEl("span", {
-          text: this.actualSizeMap.get(key) ? "Fit" : "Actual size",
-        });
+        // The buttons carry no text, so the tooltip is the only thing saying
+        // what each one does and which state it is in.
+        sizeButton.setTooltip(
+          this.actualSizeMap.get(key) ? "Fit to pane" : "Actual size"
+        );
 
         // One path for both the button and the double-click gesture, so the two
         // can never disagree about which state the diagram is in.
@@ -205,13 +227,41 @@ export class D2Processor {
           const actual = !diagramEl.classList.contains("D2__Diagram--actual");
           diagramEl.classList.toggle("D2__Diagram--actual", actual);
           this.actualSizeMap.set(key, actual);
-          sizeLabel.textContent = actual ? "Fit" : "Actual size";
+          sizeButton.setTooltip(actual ? "Fit to pane" : "Actual size");
         };
 
         sizeButton.onClick((e) => {
           e.preventDefault();
           e.stopPropagation();
           toggleActualSize();
+        });
+
+        // Cycles the layout axis and ends back at the note's own direction, so
+        // the reader can always get to what the file actually says.
+        const DIRECTIONS = ["right", "down"];
+        const directionTooltip = (d?: string) =>
+          d ? `Direction: ${d}` : "Direction: as written";
+        const dirButton = new ButtonComponent(toolbar)
+          .setClass("Preview__Button")
+          .setIcon("d2-direction");
+        dirButton.buttonEl.addClass("Preview__Direction");
+        dirButton.setTooltip(directionTooltip(this.directionOverrideMap.get(key)));
+        dirButton.onClick((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const current = this.directionOverrideMap.get(key);
+          const next =
+            current === undefined
+              ? DIRECTIONS[0]
+              : DIRECTIONS[DIRECTIONS.indexOf(current) + 1];
+          if (next === undefined) {
+            this.directionOverrideMap.delete(key);
+          } else {
+            this.directionOverrideMap.set(key, next);
+          }
+          dirButton.setTooltip(directionTooltip(next));
+          el.empty();
+          this.attemptExport(source, el, ctx);
         });
 
         const diagramEl = el.querySelector<HTMLElement>(".D2__Diagram");

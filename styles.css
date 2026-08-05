@@ -27,13 +27,15 @@
 /* Themed, not hardcoded. The previous rule forced a white background and a dark
    navy text colour, which Obsidian's own button styling then overrode — leaving
    light grey on white, unreadable in either theme. */
+/* Icon only: square, so three of them read as one control strip rather than a
+   row of differently sized boxes. The tooltip carries the meaning. */
 .Preview__Button {
   height: 24px;
-  padding: 6px;
+  width: 24px;
+  padding: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: var(--font-ui-smaller);
+  justify-content: center;
   line-height: 1;
   color: var(--text-muted);
   background-color: var(--background-primary) !important;
